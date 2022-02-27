@@ -28,15 +28,16 @@ myClock = time.Clock()
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+GREEN = (0, 102, 0)
+BLUE = (0, 51, 153)
 YELLOW = (190, 190, 0)
-LIGHT_YELLOW = (255, 255, 0)
-TURQUOISE = (0, 191, 255)
-GRAY = (224, 244, 244)
+LIGHT_YELLOW = (255, 255, 26)
+TURQUOISE = (0, 153, 255)
 DARKRED = (139, 0, 0)
 MAGENTA = (153, 0, 153)
-SKYBLUE = (153, 255, 255)
+SKYBLUE = (102, 255, 255)
+BRONZE = (230, 92, 0)
+LIGHT_BRONZE = (255, 163, 102)
 
 # Font for in-game title
 # font.init()
@@ -87,7 +88,7 @@ jetPic_rect = jetPic.get_rect(center = initial_jet_spawn())
 small_jetPic = image.load("images\small_jet.png").convert_alpha()
 small_jetPic = transform.smoothscale(small_jetPic, (90, 90))
 small_jetPic_rect1 = small_jetPic.get_rect(center = (randint(-1000,-400), randint(-500, 800)))
-small_jetPic_rect2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, 800)))
+small_jetPic_rect2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, -200)))
 small_jetPic_rect3 = small_jetPic.get_rect(center = (randint(1500,1900), randint(-500, 800)))
 
 # Background Pic
@@ -123,24 +124,28 @@ enemy = transform.smoothscale(enemy, (43, 36))
 # Positions
 X = 0
 Y = 1
-VX = 2
-VY = 3
 
 # Lists to store bullet values
 soldier_bullet = []
 jet_bullets = []
 
 # Cooldown for weapons
-cooldown = 0
-cooldown_enemy = 0
+cooldown = 0  # Used to control the soldier's gun firerate AND reload time
+reloading = False  # To check whether or not the soldier is reloading
+cooldown_enemy = 0  # Used for the firerate of the big jet's bullets
 
 # Used for counting number of jets/small jets destroyed
 num_jet = 0
 num_birds = 0
 
+# How many bullets the soldier has
+total_bullets = 30
+current_bullet_count = 30
+bullet_count_ratio = total_bullets / 160  # 160 is the length of the ammo count bar in pixels
+
 # Number of enemies total
-current_enemy_count = 40
 enemy_total = 40
+current_enemy_count = 40
 enemy_count_ratio = enemy_total / 160  # 160 is the length of the enemy_tot bar in pixels
 
 # Health/Shield of all characters
@@ -153,27 +158,28 @@ soldier_MAX_SHIELD = 200
 soldier_SHIELD_RATIO = soldier_MAX_SHIELD / 160 # 160 is the length of the shield bar in pixels
 
 jet_HEALTH = 9
-birds_HEALTH = 4
+smallJet_HEALTH = 4
 
 # Initial stats bar colors
 soldier_HEALTH_colour = GREEN
 soldier_SHIELD_colour = BLUE
+bullet_count_color = BRONZE
 enemy_tot_colour = DARKRED
 
-SOLDIER_BULLET_SPEED = 10  # Speed of my bullet
-JET_BULLET_SPEED = 15  # Speed of my bullet
+SOLDIER_BULLET_SPEED = 10  # Speed of soldier's bullets
+JET_BULLET_SPEED = 15  # Speed of big jet's bullets
 
-BADSPEED = 2  # For the speed of my jet
-jet = [jetPic_rect.centerx, jetPic_rect.centery, 0]   # inital x,y,angle values for my jet
+BADSPEED = 2  # For the speed of my big jet
+jet = [jetPic_rect.centerx, jetPic_rect.centery]   # inital x,y position for my jet
 
-BADSPEED2 = [3,6,8]  # For the speed of my birds
-# inital x,y,angle, small_jet Rect values for my 3 birds
-small_Jets = [[small_jetPic_rect1.centerx, small_jetPic_rect1.centery, 0, small_jetPic_rect1],  
-        [small_jetPic_rect2.centerx, small_jetPic_rect2.centery, 0, small_jetPic_rect2], 
-        [small_jetPic_rect3.centerx, small_jetPic_rect3.centery, 0, small_jetPic_rect3]]
+BADSPEED2 = [6,8,10]  # For the speed of my birds
+# inital x,y, small jet health, small_jet Rect values for my 3 birds
+small_Jets = [[small_jetPic_rect1.centerx, small_jetPic_rect1.centery, smallJet_HEALTH, small_jetPic_rect1],  
+        [small_jetPic_rect2.centerx, small_jetPic_rect2.centery, smallJet_HEALTH, small_jetPic_rect2], 
+        [small_jetPic_rect3.centerx, small_jetPic_rect3.centery, smallJet_HEALTH, small_jetPic_rect3]]
 
 
-goodGuy = [goodPic_rect.centerx, goodPic_rect.centery]  # Initial spot of the character
+goodGuy = [goodPic_rect.centerx, goodPic_rect.centery]  # Initial x,y position of the soldier
 
 #########################################################################################
 
@@ -299,8 +305,7 @@ def outlast():
     outlast_text_small = font.Font('freesansbold.ttf', 50)
 
     Text_Surf_big, Text_Rect_big = text_obj_M('VICTORY', outlast_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_B(
-        'YOU OUTNUMBERED THE ENEMIES ', outlast_text_small)
+    Text_Surf_small, Text_Rect_small = text_obj_B('YOU OUTLASTED THE INVADERS', outlast_text_small)
 
     Text_Rect_big.center = ((width//2), (height//2))
     Text_Rect_small.center = ((width//2), 500)
@@ -326,8 +331,7 @@ def win():
     win_text_small = font.Font('freesansbold.ttf', 50)
 
     Text_Surf_big, Text_Rect_big = text_obj_M('VICTORY', win_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_B(
-        'YOU KILLED ALL THE ENEMIES ', win_text_small)
+    Text_Surf_small, Text_Rect_small = text_obj_B('YOU COMPLETED THE MISSION', win_text_small)
 
     Text_Rect_big.center = ((width//2), (height//2))
     Text_Rect_small.center = ((width//2), 500)
@@ -423,8 +427,6 @@ def moveBadGuys(jet, small_Jets, goodX, goodY):
     jetPic_rect.centery += sin(angle) * BADSPEED
     jet[Y] = jetPic_rect.centery
 
-    jet[2] = degrees(angle)
-
     for i in small_Jets:
         angle = move_birds(i, goodX, goodY)
 
@@ -433,8 +435,6 @@ def moveBadGuys(jet, small_Jets, goodX, goodY):
 
         i[3].centery += sin(angle) * BADSPEED2[randint(0,2)]
         i[Y] = i[3].centery
-
-        i[2] = degrees(angle)
 
 
 #ENEMY RESPAWNS
@@ -457,14 +457,42 @@ def smalljet_random_respawn(enemy_smalljet):
     elif random_respawn == 2:
         enemy_smalljet[X], enemy_smalljet[Y] = enemy_smalljet[3].centerx, enemy_smalljet[3].centery = randint(1300,1600), randint(-500, 1000)
 
+# For the soldier's bullet count bar animation (i.e. Changing the color of the bullet count bar while it decreases/increases)
+def soldier_bullet_count_BAR():
+    global current_bullet_count, bullet_count_color
+    
+    # Soldier SHIELD gets taken away first, then when SHIELD is all taken away, starts taking away Soldier HEALTH          
+    if current_bullet_count >= 18:
+        bullet_count_color = BRONZE
+    
+    elif current_bullet_count >= 12:
+        bullet_count_color = LIGHT_BRONZE
+    
+    else:
+        bullet_count_color = RED
 
 # For my soldier's bullets
 def Bullets_soldier(goodX, goodY):
-    global cooldown
+    global cooldown, current_bullet_count, reloading
 
     cooldown -= 1
 
-    if mb[0] == 1 and cooldown <= 0:
+    # Since I want to replenish 30 bullets within 3 sec of reload time, I need to figure out how I can animate the bullet count bar to
+    # increase 1 bullet at a time in an even amount of time (of 3 sec).
+    # 3 sec / 30 bullets = 1 sec / 10 bullets = 0.1 sec / 1 bullet  ;  But how many frames is 0.1 sec?
+    # (For this game): 30 frames / 1 sec = 3 frames / 0.1 sec  ;  So for this game, every 0.1 sec = 3 frames, which means 3 frames / 1 bullet
+    # The cooldown will be set to 90 (frames) when reloading, so every 3 frames that decreases, increase 1 bullet to the soldier's gun
+    if reloading == True and cooldown % 3 == 0:
+        current_bullet_count += 1  # Replenishing ammo
+        
+        # When the gun reaches 30 bullets, stop reloading
+        if current_bullet_count == 30:
+            reloading = False
+
+    draw.rect(screen, bullet_count_color, (503, 669, current_bullet_count / bullet_count_ratio, 15))
+    soldier_bullet_count_BAR()
+
+    if mb[0] == 1 and cooldown <= 0 and reloading == False:
 
         # Use these coordinates as a starting reference (Between mouse and central position of the Soldier)
         referenceX = mx - goodX
@@ -489,14 +517,27 @@ def Bullets_soldier(goodX, goodY):
         incrementX = cos(centralizeAngle) * SOLDIER_BULLET_SPEED
         incrementY = sin(centralizeAngle) * SOLDIER_BULLET_SPEED
 
-        soldier_bullet.append( [gunBarrelPosX, gunBarrelPosY, incrementX, incrementY] ) # Each list is one bullet
+        cooldown = 10  # Controlling gun firerate
+        current_bullet_count -= 1  # Each shot reduces the bullet count by 1
 
-        cooldown = 7
+        # If the bullet count gets to 0, do not append any bullets to the soldier until the 3 seconds reload time is over
+        # Keep the already fired shots moving (prior to reloading) 
+        if current_bullet_count == 0:
+            # I want the reload time to be 3 seconds. Since the game runs at 30 frames/sec, I divided 1000 (= 1 sec) by 30
+            # That gives approx. 33.33 ms/frame. To get to 3 sec, I divided 3000 (= 3 sec) by ~33.33, which gave me 90 (frames in 3 sec)
+            # Knowing the fact that the game runs at 30 frames/sec, I could've also done (30 frames * 3) / (1 sec * 3) = 90 frames / 3 sec
+            cooldown = 90 
+            reloading = True
+        
+        else:
+            # Each list is the information of one bullet
+            soldier_bullet.append( [gunBarrelPosX, gunBarrelPosY, incrementX, incrementY] )
 
-    # The positions of "gunBarrelPosX" and "gunBarrelPosY" gets incremented and used for the postion of the bullet circles (in drawScene function)
+
+# The positions of "gunBarrelPosX" and "gunBarrelPosY" gets incremented and used for the postion of the bullet circles (in bulletsFired function)
     for i in soldier_bullet:
-        i[X] += i[VX]
-        i[Y] += i[VY]
+        i[X] += i[2]
+        i[Y] += i[3]
 
 # For my jet's bullets
 def Bullets_Jet(goodX, goodY):
@@ -524,15 +565,14 @@ def Bullets_Jet(goodX, goodY):
         cooldown_enemy = 50
 
     for i in jet_bullets:
-        i[X] += i[VX]
-        i[Y] += i[VY]
-
+        i[X] += i[2]
+        i[Y] += i[3]
 
 # Animating the bullets fired by soldier and jets
 def bulletsFired():
     # The bullets shot by the SOLDIER
     for bull in soldier_bullet:
-        draw.circle(screen, GREEN, (int(bull[X]), int(bull[Y])), 4)
+        draw.circle(screen, (0,255,0), (int(bull[X]), int(bull[Y])), 4)
         # screen.blit(bullet,(int(bull[X]), int(bull[Y])))
 
     # The bullets shot by the JET
@@ -540,7 +580,7 @@ def bulletsFired():
         draw.circle(screen, BLACK, (int(bull[X]), int(bull[Y])), 10)
 
 
-# For my health / shield / ammo / enemy bars on the bottom of the screen
+# For my health / shield / bullets / enemy bars on the bottom of the screen
 def soldier_enemy_Stats():
     # 1st line from each group of trios is the black background for when losing shield / health
     # 2nd line is for outlining the 2nd rect.
@@ -553,7 +593,7 @@ def soldier_enemy_Stats():
     draw.rect(screen, BLACK, (277, 669, 160, 15), 0)  
     draw.rect(screen, WHITE, (277, 669, 160, 15), 3)
 
-    # AMMO COUNT
+    # BULLET COUNT
     draw.rect(screen, BLACK, (503, 669, 160, 15), 0)     
     draw.rect(screen, WHITE, (503, 669, 160, 15), 3)
 
@@ -573,7 +613,7 @@ def soldier_enemy_Stats():
     # Enemy Pic
     screen.blit(enemy, (697, 655))
 
-# Used for the health and shield bar animations
+# For the soldier's health and shield bar animations (i.e. Changing the colors of the bar while it decreases)
 def soldier_health_shield_BAR(inflict_damage):
     global soldier_CURRENT_SHIELD, soldier_CURRENT_HEALTH, soldier_SHIELD_colour, soldier_HEALTH_colour
 
@@ -581,10 +621,10 @@ def soldier_health_shield_BAR(inflict_damage):
     if soldier_CURRENT_SHIELD > 0:
         soldier_CURRENT_SHIELD -= inflict_damage
 
-        if soldier_CURRENT_SHIELD >= 66:
+        if soldier_CURRENT_SHIELD >= 134:
             soldier_SHIELD_colour = BLUE
         
-        elif soldier_CURRENT_SHIELD >= 33:
+        elif soldier_CURRENT_SHIELD >= 67:
             soldier_SHIELD_colour = TURQUOISE
         
         else:
@@ -594,16 +634,16 @@ def soldier_health_shield_BAR(inflict_damage):
     elif soldier_CURRENT_SHIELD <= 0:
         soldier_CURRENT_HEALTH -= inflict_damage
 
-        if soldier_CURRENT_SHIELD >= 66:
+        if soldier_CURRENT_HEALTH >= 134:
             soldier_HEALTH_colour = GREEN
         
-        elif soldier_CURRENT_SHIELD >= 33:
+        elif soldier_CURRENT_HEALTH >= 67:
             soldier_HEALTH_colour = YELLOW
         
         else:
             soldier_HEALTH_colour = RED
 
-# Check for the physical collisions between the soldier and the jets (Big or Small)
+# Check for the physical collisions between the soldier and the jets (Big or small)
 def checkCollisions(small_Jets):
     # Need to check if the distance from center to center is <= 40 (for jet) or <= 20 (for small jets).
     # For this part, when they do collide, I re-set the bad guy
@@ -647,50 +687,52 @@ def checkCollisions(small_Jets):
         #     return "Continue"
 
     # If the enemy number reaches zero, print the victory screen
-    if current_enemy_count == 0:
+    if current_enemy_count <= 0:
         outlast()
 
 # Check if the soldier's bullets hit enemies, then make them respawn
-def bullet_hit_enemy(jet, small_Jets, birds_HEALTH, jet_HEALTH):
+def bullet_hit_enemy(jet, small_Jets):
 
-    global num_jet, num_birds, current_enemy_count
-
-    main_text_big = font.Font('freesansbold.ttf', 100)
-    main_text_small = font.Font('freesansbold.ttf', 50)
-
-    Text_Surf_big, Text_Rect_big = text_obj_T('VICTORY', main_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_T('YOU KILLED ALL ENEMIES', main_text_small)
-
-    Text_Rect_big.center = ((width//2), (height//2))
-    Text_Rect_small.center = ((width//2), 500)
+    global num_jet, num_birds, current_enemy_count, smallJet_HEALTH, jet_HEALTH
 
     for pain in soldier_bullet:
-        if ((pain[X]-jet[X])**2+(pain[Y]-jet[Y])**2)**0.5 < 200:
+        # If the soldier's bullet goes out of the window screen, delete it from the list
+        if not (0 <= pain[X] <= width) or not (0 <= pain[Y] <= height):
+            del soldier_bullet[soldier_bullet.index(pain)]
+            continue
+
+        if distance(pain[X], pain[Y], jet[X], jet[Y]) < 50:
+            del soldier_bullet[soldier_bullet.index(pain)]
             jet_HEALTH -= 1
+            
             if jet_HEALTH == 0:
-                jet_random_respawn()
-                pain[X], pain[Y] = 0, 0
+                jet_random_respawn()                
+                jet_HEALTH = 9
                 current_enemy_count -= 1
                 num_jet += 1
+                
                 print('You destroyed ', num_jet, ' jets')
                 print('\n')
 
             draw.rect(screen, enemy_tot_colour, (735, 669, current_enemy_count / enemy_count_ratio, 15))
+            continue         
 
-    for enemy_smalljet in small_Jets:
-        for pain in soldier_bullet:
-            if ((pain[X]-enemy_smalljet[X])**2+(pain[Y]-enemy_smalljet[Y])**2)**0.5 < 80:
-                birds_HEALTH -= 1
-                if birds_HEALTH == 0:
+        for enemy_smalljet in small_Jets:
+            if distance(pain[X], pain[Y], enemy_smalljet[X], enemy_smalljet[Y]) < 20:
+                del soldier_bullet[soldier_bullet.index(pain)]
+                enemy_smalljet[2] -= 1
+                
+                if enemy_smalljet[2] == 0:
                     smalljet_random_respawn(enemy_smalljet)
-                    pain[X], pain[Y] = 0, 0
+                    enemy_smalljet[2] = 4                
                     current_enemy_count -= 1
                     num_birds += 1
                     print('You killed ', num_birds, ' birds')
-
+                
                 draw.rect(screen, enemy_tot_colour, (735, 669, current_enemy_count / enemy_count_ratio, 15))
+                break
 
-    # Checking if certain number 3 jets and 10 birds have been taken down, then display victory
+    # Checking if certain number 5 jets and 15 small jets have been taken down, then display victory
     if num_jet >= 5 and  num_birds >= 15:
         win()
 
@@ -700,20 +742,22 @@ def bullet_hit_soldier():
     global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour
 
     for pain in jet_bullets:
+        # If the jet's bullet goes out of the window screen, delete it from the list
+        if not (0 <= pain[X] <= width) or not (0 <= pain[Y] <= height):
+            del jet_bullets[jet_bullets.index(pain)]
+            continue
+
         if distance(pain[X], pain[Y], goodGuy[X], goodGuy[Y]) < 35:
 
-            # This deletes the accumulating bullets in the "jet_bullets" list
-            # The bullets that have not hit the soldier and gone out of the window screen will still be in the list in chronological order
-            # As soon as one of the bullet hits, I have a list of redundant bullet items in the list
-            # To delete all previous bullet items from the list, including this one, I delete from current bullet item to the first bullet shot
-            del jet_bullets[:jet_bullets.index(pain) + 1]
+            # This deletes the jet's bullet that the soldier got hit by           
+            del jet_bullets[jet_bullets.index(pain)]
             
             soldier_health_shield_BAR(15)
 
         draw.rect(screen, soldier_SHIELD_colour, (277, 669, soldier_CURRENT_SHIELD / soldier_SHIELD_RATIO, 15))
         draw.rect(screen, soldier_HEALTH_colour, (55, 669, soldier_CURRENT_HEALTH / soldier_HEALTH_RATIO, 15))        
 
-        if soldier_CURRENT_HEALTH <= 0:                 
+        if soldier_CURRENT_HEALTH <= 0:
             game_over()
 
 
@@ -737,10 +781,6 @@ def soldier_enemy_Rotate(screen, jet, small_Jets, goodGuy):
         # Center the rotation
         smallJet_rotate_coordinate = (sJet[X]-rotate_smallJet.get_width()//2, sJet[Y]-rotate_smallJet.get_height()//2)    
         screen.blit(rotate_smallJet, smallJet_rotate_coordinate)
-
-        # draw.circle(screen, MAGENTA, birdObject[3].topleft, 5, 0)
-        # draw.circle(screen, MAGENTA, birdObject[3].center, 5, 0)
-        # draw.rect(screen, TURQUOISE, birdObject[3], 2)
 
     # For my soldier
     goodAng = degrees( atan2( -(my-goodGuy[Y]), mx-goodGuy[X] ) )
@@ -780,22 +820,13 @@ while running():
         Bullets_Jet(goodGuy[X], goodGuy[Y])
         bulletsFired()
 
-        bullet_hit_enemy(jet, small_Jets, birds_HEALTH, jet_HEALTH)
+        bullet_hit_enemy(jet, small_Jets)
         bullet_hit_soldier()
 
         checkCollisions(small_Jets)
 
         crosshair_rect.center = mx, my
         screen.blit(crosshair, crosshair_rect)
-
-        # draw.circle(screen, MAGENTA, goodPic_rect.topleft, 5, 0)
-        # draw.circle(screen, MAGENTA, goodPic_rect.center, 5, 0)
-        # draw.rect(screen, TURQUOISE, goodPic_rect, 2)
-
-        # draw.circle(screen, MAGENTA, jetPic_rect.topleft, 5, 0)
-        # draw.circle(screen, MAGENTA, jetPic_rect.center, 5, 0)
-        # draw.rect(screen, TURQUOISE, jetPic_rect, 2)
-
 
     myClock.tick(30)     # delay
 
