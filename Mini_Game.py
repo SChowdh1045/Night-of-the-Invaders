@@ -30,7 +30,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 102, 0)
 BLUE = (0, 51, 153)
-YELLOW = (190, 190, 0)
+YELLOW = (201, 201, 18)
 LIGHT_YELLOW = (255, 255, 26)
 TURQUOISE = (0, 153, 255)
 DARKRED = (139, 0, 0)
@@ -52,21 +52,26 @@ def running():
 
     return True
 
+# Distance function
 def distance(x1, y1, x2, y2):
     return ((x1-x2)**2 + (y1-y2)**2)**0.5
 
 
 ###########################################     MY MAIN IMAGES     ##############################################
 
-# Menu Image
+# Menu Images
 menu_bg = image.load('images\menu.jpg').convert_alpha()
-menu_bg = transform.smoothscale(menu_bg, (1152, 768))
+menu_bg = transform.smoothscale(menu_bg, (width, height))
 
 instructions = image.load('images\Instructions.png').convert_alpha()
-instructions = transform.smoothscale(instructions, (1152, 768))
+instructions = transform.smoothscale(instructions, (width, height))
 
 Credits = image.load('images\Credits.png').convert_alpha()
-Credits = transform.smoothscale(Credits, (1152, 768))
+Credits = transform.smoothscale(Credits, (width, height)) 
+
+back_button = image.load('images\\back.png').convert_alpha() # Icon made by "Smartline" from www.flaticon.com
+back_button = transform.smoothscale(back_button, (40, 40))
+back_button_rect = back_button.get_rect()
 
 # Characters 
 goodPic = image.load("images\soldier.png").convert_alpha() # Soldier
@@ -99,9 +104,6 @@ background = transform.smoothscale(backPic, (1152, 768))
 crosshair = image.load('images\crosshair.png').convert_alpha()
 crosshair = transform.smoothscale(crosshair, (43, 43))
 crosshair_rect = crosshair.get_rect()
-
-bullet = image.load('images\\bullet.png').convert_alpha()
-bullet = transform.smoothscale(bullet, (100, 15))
 
 # Bottom part
 health = image.load('images\health.png').convert_alpha() # Icon made by "nawicon" from www.flaticon.com
@@ -144,8 +146,8 @@ current_bullet_count = 30
 bullet_count_ratio = total_bullets / 160  # 160 is the length of the ammo count bar in pixels
 
 # Number of enemies total
-enemy_total = 40
-current_enemy_count = 40
+enemy_total = 60
+current_enemy_count = 60
 enemy_count_ratio = enemy_total / 160  # 160 is the length of the enemy_tot bar in pixels
 
 # Health/Shield of all characters
@@ -187,28 +189,39 @@ goodGuy = [goodPic_rect.centerx, goodPic_rect.centery]  # Initial x,y position o
 ###########################################     MENU     ##############################################
 
 # To create my texts in menu (for ' def(intro) ', WHITE font)
-def text_obj_W(text, font):
+def text_obj_W(font, text):
     textSurface = font.render(text, True, WHITE)
     return textSurface, textSurface.get_rect()
 
-
 # To create my texts in menu (for ' def(intro) ', TURQUOISE font)
-def text_obj_T(text, font):
+def text_obj_T(font, text):
     textSurface = font.render(text, True, TURQUOISE)
     return textSurface, textSurface.get_rect()
 
-
 # To create my texts in menu (for ' def(intro) ', BLACK font)
-def text_obj_B(text, font):
+def text_obj_B(font, text):
     textSurface = font.render(text, True, BLACK)
     return textSurface, textSurface.get_rect()
 
-
 # To create my texts in menu (for ' def(intro) ', MAGENTA font)
-def text_obj_M(text, font):
+def text_obj_M(font, text):
     textSurface = font.render(text, True, MAGENTA)
     return textSurface, textSurface.get_rect()
 
+
+# Change color when mouse is hovering on the rects/buttons
+def introHover(play, instructions, credits, exit):
+    if play.collidepoint((mx,my)):  # PLAY colour when hovered upon
+        draw.rect(screen, LIGHT_YELLOW, play)
+    
+    elif instructions.collidepoint((mx,my)):  # INSTRUCTIONS colour when hovered upon
+        draw.rect(screen, LIGHT_YELLOW, instructions)
+
+    elif credits.collidepoint((mx,my)):  # CREDITS colour when hovered upon
+        draw.rect(screen, LIGHT_YELLOW, credits)
+
+    elif exit.collidepoint((mx,my)):  # EXIT colour when hovered upon
+        draw.rect(screen, LIGHT_YELLOW, exit)
 
 # Menu / Intro Interface
 def intro():
@@ -217,82 +230,104 @@ def intro():
     screen.blit(menu_bg, (0, 0))
 
     # Types of text
-    main_text = font.Font('freesansbold.ttf', 100)
-    small_text = font.Font('freesansbold.ttf', 30)
+    big_font = font.Font('freesansbold.ttf', 100)
+    play_font = font.Font('freesansbold.ttf', 35)
+    small_font = font.Font('freesansbold.ttf', 30)
 
     # Title Display
-    Text_Surf, Text_Rect = text_obj_W('Night of the Invaders', main_text)
+    Text_Surf, Text_Rect = text_obj_W(big_font, 'Night of the Invaders')
     Text_Rect.center = ((width//2), (height//6))
     screen.blit(Text_Surf, Text_Rect)
 
-    if 420 < mx < 420 + 300 and 300 < my < 300 + 82:  # PLAY colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, (420, 300, 300, 82))
-    else:
-        draw.rect(screen, YELLOW, (420, 300, 300, 82))
+    # Default rects in intro page
+    play_rect = draw.rect(screen, YELLOW, (420, 300, 300, 82))
+    instructions_rect = draw.rect(screen, YELLOW, (420, 425, 300, 60))
+    credits_rect = draw.rect(screen, YELLOW, (420, 520, 300, 60))
+    exit_rect = draw.rect(screen, YELLOW, (420, 605, 300, 60))
 
-    if 420+300 > mx > 420 and 425+60 > my > 425:  # INSTRUCTIONS colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, (420, 425, 300, 60))
-    else:
-        draw.rect(screen, YELLOW, (420, 425, 300, 60))
-
-    if 420+300 > mx > 420 and 520+60 > my > 520:  # CREDITS colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, (420, 520, 300, 60))
-    else:
-        draw.rect(screen, YELLOW, (420, 520, 300, 60))
-
-    if 420+300 > mx > 420 and 605+60 > my > 605:  # EXIT colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, (420, 605, 300, 60))
-    else:
-        draw.rect(screen, YELLOW, (420, 605, 300, 60))
+    # Change color when mouse is hovering on the rects/buttons
+    introHover(play_rect,instructions_rect,credits_rect,exit_rect)
 
     # RECT OUTLINES
-    draw.rect(screen, BLACK, (420, 300, 300, 82), 4)
-    draw.rect(screen, BLACK, (420, 425, 300, 60), 4)
-    draw.rect(screen, BLACK, (420, 520, 300, 60), 4)
-    draw.rect(screen, BLACK, (420, 605, 300, 60), 4)
+    draw.rect(screen, BLACK, play_rect, 4)
+    draw.rect(screen, BLACK, instructions_rect, 4)
+    draw.rect(screen, BLACK, credits_rect, 4)
+    draw.rect(screen, BLACK, exit_rect, 4)
 
-    # PLAY
-    Text_Surf, Text_Rect = text_obj_T('PLAY', small_text)
-    Text_Rect.center = ((420+(300/2)), (300+(82/2)))
+    # PLAY text
+    Text_Surf, Text_Rect = text_obj_T(play_font,'PLAY')
+    Text_Rect.center = (play_rect.centerx, play_rect.centery)
     screen.blit(Text_Surf, Text_Rect)
 
-    # INSTRUCTIONS
-    Text_Surf, Text_Rect = text_obj_B('INSTRUCTIONS', small_text)
-    Text_Rect.center = ((420+(300/2)), (425+(60/2)))
+    # INSTRUCTIONS text
+    Text_Surf, Text_Rect = text_obj_B(small_font, 'INSTRUCTIONS')
+    Text_Rect.center = (instructions_rect.centerx, instructions_rect.centery)
     screen.blit(Text_Surf, Text_Rect)
 
-    # CREDITS
-    Text_Surf, Text_Rect = text_obj_B('CREDITS', small_text)
-    Text_Rect.center = ((420+(300/2)), (520+(60/2)))
+    # CREDITS text
+    Text_Surf, Text_Rect = text_obj_B(small_font, 'CREDITS')
+    Text_Rect.center = (credits_rect.centerx, credits_rect.centery)
     screen.blit(Text_Surf, Text_Rect)
 
-    # EXIT
-    Text_Surf, Text_Rect = text_obj_B('EXIT', small_text)
-    Text_Rect.center = ((420+(300/2)), (605+(60/2)))
+    # EXIT text
+    Text_Surf, Text_Rect = text_obj_B(small_font, 'EXIT')
+    Text_Rect.center = (exit_rect.centerx, exit_rect.centery)
     screen.blit(Text_Surf, Text_Rect)
 
     #Functions for buttons#
-    if 420+300 > mx > 420 and 300+82 > my > 300 and mb[0]:
+    if play_rect.collidepoint((mx,my)) and mb[0]:
         return None
 
     # Instructions
-    if 420+300 > mx > 420 and 425+60 > my > 425 and mb[0]:
-        while running():
-            screen.blit(instructions, (0, 0))
+    if instructions_rect.collidepoint((mx,my)) and mb[0]:
+        return "instructions"   
 
     # Credits
-    if 420+300 > mx > 420 and 520+60 > my > 520 and mb[0]:
-        while running():
-            screen.blit(Credits, (0, 0))
+    if credits_rect.collidepoint((mx,my)) and mb[0]:
+        return "credits"
 
     # Exit
-    if 420+300 > mx > 420 and 605+60 > my > 605 and mb[0]:
+    if exit_rect.collidepoint((mx,my)) and mb[0]:
         quit()
         exit()
 
-    return "intro"
+    return "menu"
 
+# When you are inside the instructions page
+def instructions_page():
+    global page
 
+    screen.fill(WHITE)
+    screen.blit(instructions, (0, 0))
+    
+    # The "back" button to go back to the menu page
+    instructions_back = draw.rect(screen, YELLOW, (30,30,60,60),0,5)
+    back_button_rect.center = instructions_back.center
+    screen.blit(back_button, back_button_rect)
+    
+    if instructions_back.collidepoint((mx,my)):
+        draw.rect(screen, LIGHT_YELLOW, instructions_back,0,5)
+        screen.blit(back_button, back_button_rect)
+        if mb[0]:
+            page = "menu"
+
+# When you are inside the credits page
+def credits_page():
+    global page
+
+    screen.fill(WHITE)
+    screen.blit(Credits, (0, 0))
+    
+    # The "back" button to go back to the menu page
+    credits_back = draw.rect(screen, YELLOW, (30,30,60,60),0,5)
+    back_button_rect.center = credits_back.center
+    screen.blit(back_button, back_button_rect)
+    
+    if credits_back.collidepoint((mx,my)):
+        draw.rect(screen, LIGHT_YELLOW, credits_back,0,5)
+        screen.blit(back_button, back_button_rect)
+        if mb[0]:
+            page = "menu"
 #########################################################################################
 
 
@@ -304,8 +339,8 @@ def outlast():
     outlast_text_big = font.Font('freesansbold.ttf', 100)
     outlast_text_small = font.Font('freesansbold.ttf', 50)
 
-    Text_Surf_big, Text_Rect_big = text_obj_M('VICTORY', outlast_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_B('YOU OUTLASTED THE INVADERS', outlast_text_small)
+    Text_Surf_big, Text_Rect_big = text_obj_M(outlast_text_big, 'VICTORY')
+    Text_Surf_small, Text_Rect_small = text_obj_M(outlast_text_small, 'YOU OUTLASTED THE INVADERS')
 
     Text_Rect_big.center = ((width//2), (height//2))
     Text_Rect_small.center = ((width//2), 500)
@@ -323,15 +358,14 @@ def outlast():
 
         display.update()
 
-
 # Show this when you win
 def win():
 
     win_text_big = font.Font('freesansbold.ttf', 100)
     win_text_small = font.Font('freesansbold.ttf', 50)
 
-    Text_Surf_big, Text_Rect_big = text_obj_M('VICTORY', win_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_B('YOU COMPLETED THE MISSION', win_text_small)
+    Text_Surf_big, Text_Rect_big = text_obj_M(win_text_big, 'VICTORY')
+    Text_Surf_small, Text_Rect_small = text_obj_M(win_text_small, 'YOU COMPLETED THE MISSION')
 
     Text_Rect_big.center = ((width//2), (height//2))
     Text_Rect_small.center = ((width//2), 500)
@@ -348,18 +382,17 @@ def win():
 
         display.update()
 
-
 # Show this when you lose
 def game_over():
 
     game_over_text_big = font.Font('freesansbold.ttf', 100)
     game_over_text_small = font.Font('freesansbold.ttf', 50)
 
-    Text_Surf_big, Text_Rect_big = text_obj_M('GAME OVER', game_over_text_big)
-    Text_Surf_small, Text_Rect_small = text_obj_B('YOU DIED ', game_over_text_small)
+    Text_Surf_big, Text_Rect_big = text_obj_M(game_over_text_big, 'GAME OVER')
+    Text_Surf_small, Text_Rect_small = text_obj_M(game_over_text_small, 'YOU DIED')
 
-    Text_Rect_big.center = ((width//2), (height//2))
-    Text_Rect_small.center = ((width//2), 500)
+    Text_Rect_big.center = ((width//2), 100)
+    Text_Rect_small.center = ((width//2), 200)
     
     game_over = True
 
@@ -367,10 +400,7 @@ def game_over():
         for e in event.get():
             if e.type == QUIT:
                 quit()
-                exit()        
-            
-            # elif e.type == KEYDOWN and e.key == K_ESCAPE:
-            #     return False
+                exit()                    
 
         screen.blit(Text_Surf_big, Text_Rect_big)
         screen.blit(Text_Surf_small, Text_Rect_small)
@@ -382,19 +412,19 @@ def game_over():
 def move_soldier(guy, keys):
 
     if ( keys[K_a] or keys[K_LEFT] ) and guy[X] > 55:        
-        goodPic_rect.centerx -= 10  # Move the Rect
+        goodPic_rect.centerx -= 9  # Move the Rect
         guy[0] = goodPic_rect.centerx
 
     if ( keys[K_d] or keys[K_RIGHT] ) and guy[X] < 1100:
-        goodPic_rect.centerx += 10
+        goodPic_rect.centerx += 9
         guy[0] = goodPic_rect.centerx
 
     if ( keys[K_s] or keys[K_DOWN] ) and guy[Y] < 620:
-        goodPic_rect.centery += 10
+        goodPic_rect.centery += 9
         guy[1] = goodPic_rect.centery
 
     if ( keys[K_w] or keys[K_UP] ) and guy[Y] > 50:
-        goodPic_rect.centery -= 10
+        goodPic_rect.centery -= 9
         guy[1] = goodPic_rect.centery
 
 def move_jet(soldierX, soldierY):
@@ -572,8 +602,7 @@ def Bullets_Jet(goodX, goodY):
 def bulletsFired():
     # The bullets shot by the SOLDIER
     for bull in soldier_bullet:
-        draw.circle(screen, (0,255,0), (int(bull[X]), int(bull[Y])), 4)
-        # screen.blit(bullet,(int(bull[X]), int(bull[Y])))
+        draw.circle(screen, (0,255,0), (int(bull[X]), int(bull[Y])), 4)        
 
     # The bullets shot by the JET
     for bull in jet_bullets:
@@ -701,8 +730,9 @@ def bullet_hit_enemy(jet, small_Jets):
             del soldier_bullet[soldier_bullet.index(pain)]
             continue
 
+        # If big jet is hit by soldier's bullets
         if distance(pain[X], pain[Y], jet[X], jet[Y]) < 50:
-            del soldier_bullet[soldier_bullet.index(pain)]
+            del soldier_bullet[soldier_bullet.index(pain)]  # Remove the bullet from screen after hitting a big jet
             jet_HEALTH -= 1
             
             if jet_HEALTH == 0:
@@ -717,10 +747,11 @@ def bullet_hit_enemy(jet, small_Jets):
             draw.rect(screen, enemy_tot_colour, (735, 669, current_enemy_count / enemy_count_ratio, 15))
             continue         
 
+        # If small jets are hit by soldier's bullets
         for enemy_smalljet in small_Jets:
             if distance(pain[X], pain[Y], enemy_smalljet[X], enemy_smalljet[Y]) < 20:
-                del soldier_bullet[soldier_bullet.index(pain)]
-                enemy_smalljet[2] -= 1
+                del soldier_bullet[soldier_bullet.index(pain)]  # Remove the bullet from screen after hitting a small jet
+                enemy_smalljet[2] -= 1  # Reduce small jet's health by 1 if hit by one of soldier's bullets
                 
                 if enemy_smalljet[2] == 0:
                     smalljet_random_respawn(enemy_smalljet)
@@ -731,9 +762,9 @@ def bullet_hit_enemy(jet, small_Jets):
                 
                 draw.rect(screen, enemy_tot_colour, (735, 669, current_enemy_count / enemy_count_ratio, 15))
                 break
-
-    # Checking if certain number 5 jets and 15 small jets have been taken down, then display victory
-    if num_jet >= 5 and  num_birds >= 15:
+    
+    # Checking if 7 jets and 25 small jets have been taken down by soldier's bullets, then display victory
+    if num_jet >= 7 and num_birds >= 25:
         win()
 
 # Check if jet bullets hit you, then display 'GAME OVER' if dead
@@ -760,7 +791,7 @@ def bullet_hit_soldier():
         if soldier_CURRENT_HEALTH <= 0:
             game_over()
 
-
+    
 # For the rotations of the images
 def soldier_enemy_Rotate(screen, jet, small_Jets, goodGuy):
     #ROTATING SURFACES
@@ -793,17 +824,27 @@ def soldier_enemy_Rotate(screen, jet, small_Jets, goodGuy):
 #########################################################################################
 
 # Setting up for my menu page
-page = "intro"
+page = "menu"
 
 while running():
     mx, my = mouse.get_pos()
     mb = mouse.get_pressed()
     keys = key.get_pressed()
 
-    if page == "intro":
-        page = intro()  # page to go right to game
+    # When you are in the menu page
+    if page == "menu":
+        page = intro()
         mouse.set_visible(True)
 
+    # When you are inside the instructions page
+    elif page == "instructions":
+        instructions_page()
+
+    # When you are inside the credits page
+    elif page == "credits":
+        credits_page()
+
+    # When you are inside the game
     elif page == None:
         # In-game BG
         screen.blit(background, (0, 0))
@@ -828,6 +869,6 @@ while running():
         crosshair_rect.center = mx, my
         screen.blit(crosshair, crosshair_rect)
 
-    myClock.tick(30)     # delay
+    myClock.tick(30)   # 30 FPS
 
     display.flip()
