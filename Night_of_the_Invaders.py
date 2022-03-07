@@ -74,10 +74,14 @@ back_button = transform.smoothscale(back_button, (40, 40))
 back_button_rect = back_button.get_rect()
 
 # Characters 
+
+# Soldier
 goodPic = image.load("images\soldier.png").convert_alpha() # Soldier
 goodPic = transform.smoothscale(goodPic, (130, 130))  
-goodPic_rect = goodPic.get_rect(center = (width//2, height//2))
+reset_goodGuy = goodPic.get_rect(center = (width//2, height//2))
+goodPic_rect = reset_goodGuy
 
+# Big Jet
 jetPic = image.load("images\plane.png").convert_alpha()
 jetPic = transform.smoothscale(jetPic, (270, 270))
 def initial_jet_spawn(): # To be used in the very next line
@@ -88,13 +92,21 @@ def initial_jet_spawn(): # To be used in the very next line
 
     elif random_respawn == 2:
         return (randint(1400,2000), randint(-500, 1000))
-jetPic_rect = jetPic.get_rect(center = initial_jet_spawn())
+reset_Jet = jetPic.get_rect(center = initial_jet_spawn())
+jetPic_rect = reset_Jet
 
+# Small Jet
 small_jetPic = image.load("images\small_jet.png").convert_alpha()
 small_jetPic = transform.smoothscale(small_jetPic, (90, 90))
-small_jetPic_rect1 = small_jetPic.get_rect(center = (randint(-1000,-400), randint(-500, 800)))
-small_jetPic_rect2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, -200)))
-small_jetPic_rect3 = small_jetPic.get_rect(center = (randint(1500,1900), randint(-500, 800)))
+
+reset_sJ1 = small_jetPic.get_rect(center = (randint(-1000,-400), randint(-500, 800)))
+small_jetPic_rect1 = reset_sJ1
+
+reset_sJ2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, -200)))
+small_jetPic_rect2 = reset_sJ2
+
+reset_sJ3 = small_jetPic.get_rect(center = (randint(1500,1900), randint(-500, 800)))
+small_jetPic_rect3 = reset_sJ3
 
 # Background Pic
 backPic = image.load("images\\fire.jpg").convert_alpha()
@@ -155,8 +167,8 @@ soldier_CURRENT_HEALTH = 200
 soldier_MAX_HEALTH = 200
 soldier_HEALTH_RATIO = soldier_MAX_HEALTH / 160  # 160 is the length of the health bar in pixels
 
-soldier_CURRENT_SHIELD = 200
-soldier_MAX_SHIELD = 200
+soldier_CURRENT_SHIELD = 150
+soldier_MAX_SHIELD = 150
 soldier_SHIELD_RATIO = soldier_MAX_SHIELD / 160 # 160 is the length of the shield bar in pixels
 
 jet_HEALTH = 9
@@ -171,7 +183,7 @@ enemy_tot_colour = DARKRED
 SOLDIER_BULLET_SPEED = 10  # Speed of soldier's bullets
 JET_BULLET_SPEED = 15  # Speed of big jet's bullets
 
-BADSPEED = 2  # For the speed of my big jet
+BADSPEED = 3  # For the speed of my big jet
 jet = [jetPic_rect.centerx, jetPic_rect.centery]   # inital x,y position for my jet
 
 BADSPEED2 = [6,8,10]  # For the speed of my birds
@@ -210,22 +222,13 @@ def text_obj_M(font, text):
 
 
 # Change color when mouse is hovering on the rects/buttons
-def introHover(play, instructions, credits, exit):
-    if play.collidepoint((mx,my)):  # PLAY colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, play)
-    
-    elif instructions.collidepoint((mx,my)):  # INSTRUCTIONS colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, instructions)
-
-    elif credits.collidepoint((mx,my)):  # CREDITS colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, credits)
-
-    elif exit.collidepoint((mx,my)):  # EXIT colour when hovered upon
-        draw.rect(screen, LIGHT_YELLOW, exit)
+def introHover(options_rect):
+    if options_rect.collidepoint((mx,my)):  # PLAY colour when hovered upon
+        draw.rect(screen, LIGHT_YELLOW, options_rect)
 
 # Menu / Intro Interface
 def intro():
-    global page
+    global page, small_font
 
     screen.blit(menu_bg, (0, 0))
 
@@ -246,7 +249,10 @@ def intro():
     exit_rect = draw.rect(screen, YELLOW, (420, 605, 300, 60))
 
     # Change color when mouse is hovering on the rects/buttons
-    introHover(play_rect,instructions_rect,credits_rect,exit_rect)
+    introHover(play_rect)
+    introHover(instructions_rect)
+    introHover(credits_rect)
+    introHover(exit_rect)
 
     # RECT OUTLINES
     draw.rect(screen, BLACK, play_rect, 4)
@@ -276,22 +282,20 @@ def intro():
 
     #Functions for buttons#
     if play_rect.collidepoint((mx,my)) and mb[0]:
-        return None
+        page = "playing"
 
     # Instructions
     if instructions_rect.collidepoint((mx,my)) and mb[0]:
-        return "instructions"   
+        page = "instructions"   
 
     # Credits
     if credits_rect.collidepoint((mx,my)) and mb[0]:
-        return "credits"
+        page = "credits"
 
     # Exit
     if exit_rect.collidepoint((mx,my)) and mb[0]:
         quit()
         exit()
-
-    return "menu"
 
 # When you are inside the instructions page
 def instructions_page():
@@ -335,78 +339,127 @@ def credits_page():
 
 # Show this when you outnumber the enemies
 def outlast():
-
-    outlast_text_big = font.Font('freesansbold.ttf', 100)
-    outlast_text_small = font.Font('freesansbold.ttf', 50)
-
-    Text_Surf_big, Text_Rect_big = text_obj_M(outlast_text_big, 'VICTORY')
-    Text_Surf_small, Text_Rect_small = text_obj_M(outlast_text_small, 'YOU OUTLASTED THE INVADERS')
-
-    Text_Rect_big.center = ((width//2), (height//2))
-    Text_Rect_small.center = ((width//2), 500)
-    
-    outlast = True
-
-    while outlast:
-        for e in event.get():
-            if e.type == QUIT:
-                quit()
-                exit()
-
-        screen.blit(Text_Surf_big, Text_Rect_big)
-        screen.blit(Text_Surf_small, Text_Rect_small)
-
-        display.update()
+    end_of_game_text("VICTORY","YOU OUTLASTED THE INVADERS")
 
 # Show this when you win
 def win():
-
-    win_text_big = font.Font('freesansbold.ttf', 100)
-    win_text_small = font.Font('freesansbold.ttf', 50)
-
-    Text_Surf_big, Text_Rect_big = text_obj_M(win_text_big, 'VICTORY')
-    Text_Surf_small, Text_Rect_small = text_obj_M(win_text_small, 'YOU COMPLETED THE MISSION')
-
-    Text_Rect_big.center = ((width//2), (height//2))
-    Text_Rect_small.center = ((width//2), 500)
-    pause = True
-
-    while win:
-        for e in event.get():
-            if e.type == QUIT:
-                quit()
-                exit()
-
-        screen.blit(Text_Surf_big, Text_Rect_big)
-        screen.blit(Text_Surf_small, Text_Rect_small)
-
-        display.update()
+   end_of_game_text("VICTORY","YOU COMPLETED THE MISSION")
 
 # Show this when you lose
 def game_over():
+    end_of_game_text("GAME OVER","YOU DIED")
 
+# Show this when the game ends
+def end_of_game_text(result, reason):
+    global small_font, page
+
+    mouse.set_visible(True)
+    reset_game()
+
+    # BIG PURPLE SIGN
     game_over_text_big = font.Font('freesansbold.ttf', 100)
     game_over_text_small = font.Font('freesansbold.ttf', 50)
 
-    Text_Surf_big, Text_Rect_big = text_obj_M(game_over_text_big, 'GAME OVER')
-    Text_Surf_small, Text_Rect_small = text_obj_M(game_over_text_small, 'YOU DIED')
+    Text_Surf_big, Text_Rect_big = text_obj_M(game_over_text_big, result)
+    Text_Surf_small, Text_Rect_small = text_obj_M(game_over_text_small, reason)
 
-    Text_Rect_big.center = ((width//2), 100)
-    Text_Rect_small.center = ((width//2), 200)
+    Text_Rect_big.center = (width//2, 100)
+    Text_Rect_small.center = (width//2, 200)
+
     
-    game_over = True
+    # IN THE "OPTIONS" RECTANGLE
+    options = Rect(0, 0, 400, 400)
+    options.centerx, options.y = Text_Rect_big.centerx, 240
 
-    while game_over:
-        for e in event.get():
-            if e.type == QUIT:
-                quit()
-                exit()                    
+    play_again_background = Rect(0, 0, 250, 100)
+    go_to_menu_background = Rect(0, 0, 250, 100)
+    exit_game_background = Rect(0, 0, 250, 100)
 
-        screen.blit(Text_Surf_big, Text_Rect_big)
-        screen.blit(Text_Surf_small, Text_Rect_small)
 
-        display.update()
+    play_again_surf, play_again_textRect = text_obj_B(small_font, 'PLAY AGAIN')
+    go_to_menu_surf, go_to_menu_textRect = text_obj_B(small_font, 'GO TO MENU')
+    exit_game_surf, exit_game_textRect = text_obj_B(small_font, 'EXIT')                   
 
+    # BIG PURPLE SIGN
+    screen.blit(Text_Surf_big, Text_Rect_big)
+    screen.blit(Text_Surf_small, Text_Rect_small)
+
+    # IN THE "OPTIONS" RECTANGLE
+    draw.rect(screen, BLACK, options, 5, 7)
+
+    play_again_background.centerx, play_again_background.y = options.centerx, options.y + 30
+    draw.rect(screen, YELLOW, play_again_background, 0, 5)
+
+    go_to_menu_background.centerx, go_to_menu_background.y = options.centerx, play_again_background.y + play_again_background.h + 20
+    draw.rect(screen, YELLOW, go_to_menu_background, 0, 5)
+
+    exit_game_background.centerx, exit_game_background.y = options.centerx, go_to_menu_background.y + go_to_menu_background.h + 20
+    draw.rect(screen, YELLOW, exit_game_background, 0, 5)
+
+
+    play_again_textRect.center = play_again_background.center
+    go_to_menu_textRect.center = go_to_menu_background.center
+    exit_game_textRect.center = exit_game_background.center
+
+    screen.blit(play_again_surf, play_again_textRect)
+    screen.blit(go_to_menu_surf, go_to_menu_textRect)
+    screen.blit(exit_game_surf, exit_game_textRect)
+
+    if play_again_background.collidepoint((mx,my)):
+        draw.rect(screen, LIGHT_YELLOW, play_again_background,0,5)
+        screen.blit(play_again_surf, play_again_textRect)
+        if mb[0]:
+            page = "playing"
+
+    elif go_to_menu_background.collidepoint((mx,my)):
+        draw.rect(screen, LIGHT_YELLOW, go_to_menu_background,0,5)
+        screen.blit(go_to_menu_surf, go_to_menu_textRect)
+        if mb[0]:
+            page = "menu"
+
+    elif exit_game_background.collidepoint((mx,my)):
+        draw.rect(screen, LIGHT_YELLOW, exit_game_background,0,5)
+        screen.blit(exit_game_surf, exit_game_textRect)
+        if mb[0]:
+            quit()
+            exit()
+
+#Reset everything after the player has reached "GAME OVER"
+def reset_game():
+    global goodPic_rect, jetPic_rect, small_jetPic_rect1, small_jetPic_rect2, small_jetPic_rect3, cooldown, reloading, cooldown_enemy, \
+        num_jet, num_birds, total_bullets, current_bullet_count, enemy_total, current_enemy_count, soldier_CURRENT_HEALTH, \
+        soldier_MAX_HEALTH, soldier_CURRENT_SHIELD, soldier_MAX_SHIELD, jet_HEALTH, smallJet_HEALTH
+
+    goodPic_rect.center = (width//2, height//2)
+    jetPic_rect.center = initial_jet_spawn()
+    small_jetPic_rect1.center = (randint(-1000,-400), randint(-500, 800))
+    small_jetPic_rect2.center = (randint(-600,1900), randint(-500, -200))
+    small_jetPic_rect3.center = (randint(1500,1900), randint(-500, 800))
+    
+    soldier_bullet.clear()
+    jet_bullets.clear()
+
+    cooldown = 0
+    reloading = False
+    cooldown_enemy = 0
+
+    num_jet = 0
+    num_birds = 0
+
+    total_bullets = 30
+    current_bullet_count = 30
+
+    enemy_total = 60
+    current_enemy_count = 60
+
+    soldier_CURRENT_HEALTH = 200
+    soldier_MAX_HEALTH = 200
+
+    soldier_CURRENT_SHIELD = 150
+    soldier_MAX_SHIELD = 150
+
+    jet_HEALTH = 9
+    smallJet_HEALTH = 4
 
 # Move my soldier by keys (WASD and arrow keys) (also putting boundaries so the soldier doesn't go off the screen)
 def move_soldier(guy, keys):
@@ -678,7 +731,7 @@ def checkCollisions(small_Jets):
     # For this part, when they do collide, I re-set the bad guy
     # I also put the health / shield / enemy_count bar
 
-    global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour, current_enemy_count, enemy_tot_colour
+    global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour, current_enemy_count, enemy_tot_colour, page
 
     if distance(goodGuy[X], goodGuy[Y], jet[X], jet[Y]) <= 40:
         
@@ -710,19 +763,17 @@ def checkCollisions(small_Jets):
 
     
     # You lose when you lose all your shield and health
-    if soldier_CURRENT_HEALTH <= 0:            
-        game_over()
-        # if game_over() == False:
-        #     return "Continue"
+    if soldier_CURRENT_HEALTH <= 0:
+        page = "game_over"
 
     # If the enemy number reaches zero, print the victory screen
     if current_enemy_count <= 0:
-        outlast()
+        page = "outlast"
 
 # Check if the soldier's bullets hit enemies, then make them respawn
 def bullet_hit_enemy(jet, small_Jets):
 
-    global num_jet, num_birds, current_enemy_count, smallJet_HEALTH, jet_HEALTH
+    global num_jet, num_birds, current_enemy_count, smallJet_HEALTH, jet_HEALTH, page
 
     for pain in soldier_bullet:
         # If the soldier's bullet goes out of the window screen, delete it from the list
@@ -765,12 +816,12 @@ def bullet_hit_enemy(jet, small_Jets):
     
     # Checking if 7 jets and 25 small jets have been taken down by soldier's bullets, then display victory
     if num_jet >= 7 and num_birds >= 25:
-        win()
+        page = "win"
 
 # Check if jet bullets hit you, then display 'GAME OVER' if dead
 def bullet_hit_soldier():
 
-    global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour
+    global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour, page
 
     for pain in jet_bullets:
         # If the jet's bullet goes out of the window screen, delete it from the list
@@ -788,12 +839,12 @@ def bullet_hit_soldier():
         draw.rect(screen, soldier_SHIELD_colour, (277, 669, soldier_CURRENT_SHIELD / soldier_SHIELD_RATIO, 15))
         draw.rect(screen, soldier_HEALTH_colour, (55, 669, soldier_CURRENT_HEALTH / soldier_HEALTH_RATIO, 15))        
 
-        if soldier_CURRENT_HEALTH <= 0:
-            game_over()
+        if soldier_CURRENT_HEALTH <= 0:            
+            page = "game_over"
 
     
 # For the rotations of the images
-def soldier_enemy_Rotate(screen, jet, small_Jets, goodGuy):
+def soldier_enemy_Rotate(jet, small_Jets, goodGuy):
     #ROTATING SURFACES
 
     # The jet pic
@@ -833,7 +884,7 @@ while running():
 
     # When you are in the menu page
     if page == "menu":
-        page = intro()
+        intro()
         mouse.set_visible(True)
 
     # When you are inside the instructions page
@@ -845,7 +896,7 @@ while running():
         credits_page()
 
     # When you are inside the game
-    elif page == None:
+    elif page == "playing":
         # In-game BG
         screen.blit(background, (0, 0))
 
@@ -853,7 +904,7 @@ while running():
 
         soldier_enemy_Stats()       
 
-        soldier_enemy_Rotate(screen, jet, small_Jets, goodGuy)
+        soldier_enemy_Rotate(jet, small_Jets, goodGuy)
         move_soldier(goodGuy, keys)
         moveBadGuys(jet, small_Jets, goodGuy[X], goodGuy[Y])
 
@@ -864,10 +915,20 @@ while running():
         bullet_hit_enemy(jet, small_Jets)
         bullet_hit_soldier()
 
-        checkCollisions(small_Jets)
+        checkCollisions(small_Jets) 
 
         crosshair_rect.center = mx, my
         screen.blit(crosshair, crosshair_rect)
+
+    # End of game results
+    elif page == "game_over":
+        game_over()
+    
+    elif page == "win":
+        win()
+   
+    elif page == "outlast":
+        outlast()
 
     myClock.tick(30)   # 30 FPS
 
