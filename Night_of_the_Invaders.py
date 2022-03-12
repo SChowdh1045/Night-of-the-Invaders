@@ -19,8 +19,9 @@ screen = display.set_mode(windowSize)
 
 display.set_caption("Night of the Invaders")
 
-song = mixer.Sound('music\\bg_music.wav')
-song.play(loops=-1)
+bg_music = mixer.music
+bg_music.load("music\\bg_music.wav")
+bg_music.play(-1)
 
 myClock = time.Clock()
 
@@ -92,21 +93,17 @@ def initial_jet_spawn(): # To be used in the very next line
 
     elif random_respawn == 2:
         return (randint(1400,2000), randint(-500, 1000))
-reset_Jet = jetPic.get_rect(center = initial_jet_spawn())
-jetPic_rect = reset_Jet
+jetPic_rect = jetPic.get_rect(center = initial_jet_spawn())
 
 # Small Jet
 small_jetPic = image.load("images\small_jet.png").convert_alpha()
 small_jetPic = transform.smoothscale(small_jetPic, (90, 90))
 
-reset_sJ1 = small_jetPic.get_rect(center = (randint(-1000,-400), randint(-500, 800)))
-small_jetPic_rect1 = reset_sJ1
+small_jetPic_rect1 = small_jetPic.get_rect(center = (randint(-1000,-400), randint(-500, 800)))
 
-reset_sJ2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, -200)))
-small_jetPic_rect2 = reset_sJ2
+small_jetPic_rect2 = small_jetPic.get_rect(center = (randint(-600,1900), randint(-500, -200)))
 
-reset_sJ3 = small_jetPic.get_rect(center = (randint(1500,1900), randint(-500, 800)))
-small_jetPic_rect3 = reset_sJ3
+small_jetPic_rect3 = small_jetPic.get_rect(center = (randint(1500,1900), randint(-500, 800)))
 
 # Background Pic
 backPic = image.load("images\\fire.jpg").convert_alpha()
@@ -282,6 +279,7 @@ def intro():
 
     #Functions for buttons#
     if play_rect.collidepoint((mx,my)) and mb[0]:
+        bg_music.pause()     
         page = "playing"
 
     # Instructions
@@ -415,6 +413,7 @@ def end_of_game_text(result, reason):
         draw.rect(screen, LIGHT_YELLOW, go_to_menu_background,0,5)
         screen.blit(go_to_menu_surf, go_to_menu_textRect)
         if mb[0]:
+            bg_music.rewind()
             page = "menu"
 
     elif exit_game_background.collidepoint((mx,my)):
@@ -566,7 +565,12 @@ def Bullets_soldier(goodX, goodY):
     # (For this game): 30 frames / 1 sec = 3 frames / 0.1 sec  ;  So for this game, every 0.1 sec = 3 frames, which means 3 frames / 1 bullet
     # The cooldown will be set to 90 (frames) when reloading, so every 3 frames that decreases, increase 1 bullet to the soldier's gun
     if reloading == True and cooldown % 3 == 0:
-        current_bullet_count += 1  # Replenishing ammo
+        current_bullet_count += 1  # Replenishing ammo        
+        
+        # Reload sound effect
+        if current_bullet_count == 6:
+            reload_sound = mixer.Sound("music\\reload.mp3")
+            reload_sound.play()
         
         # When the gun reaches 30 bullets, stop reloading
         if current_bullet_count == 30:
@@ -576,6 +580,9 @@ def Bullets_soldier(goodX, goodY):
     soldier_bullet_count_BAR()
 
     if mb[0] == 1 and cooldown <= 0 and reloading == False:
+        bullet_sound = mixer.Sound("music\laser_gun.mp3")
+        bullet_sound.set_volume(0.2)
+        bullet_sound.play()
 
         # Use these coordinates as a starting reference (Between mouse and central position of the Soldier)
         referenceX = mx - goodX
@@ -630,6 +637,13 @@ def Bullets_Jet(goodX, goodY):
     cooldown_enemy -= 1
 
     if cooldown_enemy <= 0:
+        
+        if 0 <= jetPic_rect.centerx <= width and 0 <= jetPic_rect.centery <= height:
+            bullet_sound = mixer.Sound("music\jet_bullet.mp3")
+            bullet_sound.set_volume(0.5)
+            bullet_sound.play()
+                
+
         BIGX = goodX - jet[X]
         BIGY = goodY - jet[Y]
 
@@ -734,6 +748,9 @@ def checkCollisions(small_Jets):
     global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour, current_enemy_count, enemy_tot_colour, page
 
     if distance(goodGuy[X], goodGuy[Y], jet[X], jet[Y]) <= 40:
+        bullet_sound = mixer.Sound("music\collision.mp3")
+        bullet_sound.set_volume(0.6)
+        bullet_sound.play()
         
         # random set integers for random spawn locations
         jet_random_respawn()
@@ -749,6 +766,9 @@ def checkCollisions(small_Jets):
 
     for enemy_smalljet in small_Jets:
         if distance(goodGuy[X], goodGuy[Y], enemy_smalljet[X], enemy_smalljet[Y]) <= 20:
+            bullet_sound = mixer.Sound("music\collision.mp3")
+            bullet_sound.set_volume(0.6)
+            bullet_sound.play()
             
             # random set integers for random spawn locations
             smalljet_random_respawn(enemy_smalljet)
@@ -787,6 +807,9 @@ def bullet_hit_enemy(jet, small_Jets):
             jet_HEALTH -= 1
             
             if jet_HEALTH == 0:
+                crash_sound_Bjet = mixer.Sound("music\collision.mp3")
+                crash_sound_Bjet.set_volume(0.6)
+                crash_sound_Bjet.play()
                 jet_random_respawn()                
                 jet_HEALTH = 9
                 current_enemy_count -= 1
@@ -805,6 +828,9 @@ def bullet_hit_enemy(jet, small_Jets):
                 enemy_smalljet[2] -= 1  # Reduce small jet's health by 1 if hit by one of soldier's bullets
                 
                 if enemy_smalljet[2] == 0:
+                    crash_sound_Sjet = mixer.Sound("music\collision.mp3")
+                    crash_sound_Sjet.set_volume(0.6)
+                    crash_sound_Sjet.play()
                     smalljet_random_respawn(enemy_smalljet)
                     enemy_smalljet[2] = 4                
                     current_enemy_count -= 1
@@ -900,7 +926,7 @@ while running():
         # In-game BG
         screen.blit(background, (0, 0))
 
-        mouse.set_visible(False)
+        mouse.set_visible(False)        
 
         soldier_enemy_Stats()       
 
