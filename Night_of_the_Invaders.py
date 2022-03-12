@@ -413,7 +413,7 @@ def end_of_game_text(result, reason):
         draw.rect(screen, LIGHT_YELLOW, go_to_menu_background,0,5)
         screen.blit(go_to_menu_surf, go_to_menu_textRect)
         if mb[0]:
-            bg_music.rewind()
+            bg_music.unpause()
             page = "menu"
 
     elif exit_game_background.collidepoint((mx,my)):
@@ -568,7 +568,7 @@ def Bullets_soldier(goodX, goodY):
         current_bullet_count += 1  # Replenishing ammo        
         
         # Reload sound effect
-        if current_bullet_count == 6:
+        if current_bullet_count == 8:
             reload_sound = mixer.Sound("music\\reload.mp3")
             reload_sound.play()
         
@@ -580,9 +580,16 @@ def Bullets_soldier(goodX, goodY):
     soldier_bullet_count_BAR()
 
     if mb[0] == 1 and cooldown <= 0 and reloading == False:
-        bullet_sound = mixer.Sound("music\laser_gun.mp3")
-        bullet_sound.set_volume(0.2)
-        bullet_sound.play()
+        # Laser gunshot sound effect when there are <= 10 bullets left in the gun
+        if current_bullet_count <= 8:            
+            bullet_sound = mixer.Sound("music\laser_gun2.mp3")
+            bullet_sound.play()
+
+        # Default laser gunshot sound effect
+        else:            
+            bullet_sound = mixer.Sound("music\laser_gun.mp3")
+            bullet_sound.set_volume(0.2)
+            bullet_sound.play()
 
         # Use these coordinates as a starting reference (Between mouse and central position of the Soldier)
         referenceX = mx - goodX
@@ -747,10 +754,9 @@ def checkCollisions(small_Jets):
 
     global soldier_CURRENT_HEALTH, soldier_CURRENT_SHIELD, soldier_HEALTH_colour, soldier_SHIELD_colour, current_enemy_count, enemy_tot_colour, page
 
-    if distance(goodGuy[X], goodGuy[Y], jet[X], jet[Y]) <= 40:
-        bullet_sound = mixer.Sound("music\collision.mp3")
-        bullet_sound.set_volume(0.6)
-        bullet_sound.play()
+    if distance(goodGuy[X], goodGuy[Y], jet[X], jet[Y]) <= 70:
+        collision_sound_BJET = mixer.Sound("music\collision.mp3")        
+        collision_sound_BJET.play()
         
         # random set integers for random spawn locations
         jet_random_respawn()
@@ -765,10 +771,10 @@ def checkCollisions(small_Jets):
 
 
     for enemy_smalljet in small_Jets:
-        if distance(goodGuy[X], goodGuy[Y], enemy_smalljet[X], enemy_smalljet[Y]) <= 20:
-            bullet_sound = mixer.Sound("music\collision.mp3")
-            bullet_sound.set_volume(0.6)
-            bullet_sound.play()
+        if distance(goodGuy[X], goodGuy[Y], enemy_smalljet[X], enemy_smalljet[Y]) <= 40:
+            collision_sound_SJET = mixer.Sound("music\collision.mp3")
+            collision_sound_SJET.set_volume(0.3)
+            collision_sound_SJET.play()
             
             # random set integers for random spawn locations
             smalljet_random_respawn(enemy_smalljet)
@@ -807,9 +813,9 @@ def bullet_hit_enemy(jet, small_Jets):
             jet_HEALTH -= 1
             
             if jet_HEALTH == 0:
-                crash_sound_Bjet = mixer.Sound("music\collision.mp3")
-                crash_sound_Bjet.set_volume(0.6)
+                crash_sound_Bjet = mixer.Sound("music\collision.mp3")                
                 crash_sound_Bjet.play()
+
                 jet_random_respawn()                
                 jet_HEALTH = 9
                 current_enemy_count -= 1
@@ -829,8 +835,9 @@ def bullet_hit_enemy(jet, small_Jets):
                 
                 if enemy_smalljet[2] == 0:
                     crash_sound_Sjet = mixer.Sound("music\collision.mp3")
-                    crash_sound_Sjet.set_volume(0.6)
+                    crash_sound_Sjet.set_volume(0.3)
                     crash_sound_Sjet.play()
+
                     smalljet_random_respawn(enemy_smalljet)
                     enemy_smalljet[2] = 4                
                     current_enemy_count -= 1
@@ -868,7 +875,7 @@ def bullet_hit_soldier():
         if soldier_CURRENT_HEALTH <= 0:            
             page = "game_over"
 
-    
+
 # For the rotations of the images
 def soldier_enemy_Rotate(jet, small_Jets, goodGuy):
     #ROTATING SURFACES
